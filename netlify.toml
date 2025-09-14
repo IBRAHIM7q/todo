@@ -11,3 +11,9 @@
 
 [build.processing]
   skip_processing = true
+
+# SPA rewrite rule
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
