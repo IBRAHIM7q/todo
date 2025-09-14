@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
+  distDir: 'out',
   images: {
     unoptimized: true,
   },
@@ -9,10 +10,7 @@ const nextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: true,
-  },
-  experimental: {
-    staticPageGenerationTimeout: 300,
-  },
+  }
 }
 
 module.exports = nextConfig
