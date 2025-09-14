@@ -12,6 +12,7 @@ import { Clock, CheckCircle, Circle, Plus, Edit, Trash2, Play, Pause, RotateCcw,
 import { format } from "date-fns";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ColorSchemeSelector } from "@/components/color-scheme-selector";
+import { WelcomeScreen } from "@/components/welcome-screen";
 
 interface Task {
   id: string;
@@ -118,6 +119,7 @@ const colorSchemes = {
 };
 
 export default function Dashboard() {
+  const [userName, setUserName] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -125,26 +127,51 @@ export default function Dashboard() {
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [timerType, setTimerType] = useState<"FOCUS" | "BREAK">("FOCUS");
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
-  const [newTask, setNewTask] = useState({ title: "", description: "", priority: "MEDIUM" as const });
+  const [newTask, setNewTask] = useState({ title: "", description: "", priority: "MEDIUM" as "LOW" | "MEDIUM" | "HIGH" });
   const [newNote, setNewNote] = useState({ title: "", content: "", tags: "" });
   const [aiResponse, setAiResponse] = useState("");
   const [aiQuery, setAiQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [colorScheme, setColorScheme] = useState<keyof typeof colorSchemes>("purple");
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Fetch data on component mount
+  // Check if user has already entered their name
   useEffect(() => {
-    fetchData();
+    const savedName = localStorage.getItem('userName');
+    const savedUserId = localStorage.getItem('userId');
+    
+    if (savedName) {
+      setUserName(savedName);
+    }
+    
+    if (!savedUserId) {
+      const id = 'user_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('userId', id);
+      setUserId(id);
+    } else {
+      setUserId(savedUserId);
+    }
   }, []);
 
+  // Fetch data on component mount and when userId changes
+  useEffect(() => {
+    if (userId && userName) {
+      fetchData();
+    }
+  }, [userId, userName]);
+
   const fetchData = async () => {
+    if (!userId) return;
+    
     try {
       setLoading(true);
+      const headers = { 'x-user-id': userId };
+      
       const [tasksRes, notesRes, statsRes] = await Promise.all([
-        fetch('/api/tasks'),
-        fetch('/api/notes'),
-        fetch('/api/stats')
+        fetch('/api/tasks', { headers }),
+        fetch('/api/notes', { headers }),
+        fetch('/api/stats', { headers })
       ]);
 
       if (tasksRes.ok) {
@@ -198,14 +225,21 @@ export default function Dashboard() {
   }, [isTimerActive, timeLeft, timerType]);
 
   const saveFocusSession = async (duration: number, type: "FOCUS" | "BREAK") => {
+    if (!userId) return;
+    
     try {
       await fetch('/api/focus-sessions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': userId
+        },
         body: JSON.stringify({ duration, type })
       });
       // Refresh stats
-      const statsRes = await fetch('/api/stats');
+      const statsRes = await fetch('/api/stats', {
+        headers: { 'x-user-id': userId }
+      });
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
@@ -229,34 +263,42 @@ export default function Dashboard() {
   };
 
   const addTask = async () => {
-    if (newTask.title.trim()) {
-      try {
-        const response = await fetch('/api/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newTask)
-        });
+    if (!userId || !userName || !newTask.title.trim()) return;
+    
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': userId
+        },
+        body: JSON.stringify(newTask)
+      });
 
-        if (response.ok) {
-          const task = await response.json();
-          setTasks([...tasks, task]);
-          setNewTask({ title: "", description: "", priority: "MEDIUM" });
-          // Refresh stats
-          fetchData();
-        }
-      } catch (error) {
-        console.error('Error adding task:', error);
+      if (response.ok) {
+        const task = await response.json();
+        setTasks([...tasks, task]);
+        setNewTask({ title: "", description: "", priority: "MEDIUM" });
+        // Refresh stats
+        fetchData();
       }
+    } catch (error) {
+      console.error('Error adding task:', error);
     }
   };
 
   const toggleTask = async (id: string) => {
+    if (!userId || !userName) return;
+    
     try {
       const task = tasks.find(t => t.id === id);
       if (task) {
         const response = await fetch(`/api/tasks/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-user-id': userId
+          },
           body: JSON.stringify({ ...task, completed: !task.completed })
         });
 
@@ -274,9 +316,14 @@ export default function Dashboard() {
   };
 
   const deleteTask = async (id: string) => {
+    if (!userId || !userName) return;
+    
     try {
       const response = await fetch(`/api/tasks/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 
+          'x-user-id': userId
+        }
       });
 
       if (response.ok) {
@@ -290,31 +337,39 @@ export default function Dashboard() {
   };
 
   const addNote = async () => {
-    if (newNote.title.trim() && newNote.content.trim()) {
-      try {
-        const response = await fetch('/api/notes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newNote)
-        });
+    if (!userId || !userName || !newNote.title.trim() || !newNote.content.trim()) return;
+    
+    try {
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': userId
+        },
+        body: JSON.stringify(newNote)
+      });
 
-        if (response.ok) {
-          const note = await response.json();
-          setNotes([...notes, note]);
-          setNewNote({ title: "", content: "", tags: "" });
-          // Refresh stats
-          fetchData();
-        }
-      } catch (error) {
-        console.error('Error adding note:', error);
+      if (response.ok) {
+        const note = await response.json();
+        setNotes([...notes, note]);
+        setNewNote({ title: "", content: "", tags: "" });
+        // Refresh stats
+        fetchData();
       }
+    } catch (error) {
+      console.error('Error adding note:', error);
     }
   };
 
   const deleteNote = async (id: string) => {
+    if (!userId || !userName) return;
+    
     try {
       const response = await fetch(`/api/notes/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 
+          'x-user-id': userId
+        }
       });
 
       if (response.ok) {
@@ -346,27 +401,35 @@ export default function Dashboard() {
   };
 
   const getAIResponse = async () => {
-    if (aiQuery.trim()) {
-      try {
-        setAiLoading(true);
-        const response = await fetch('/api/ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: aiQuery })
-        });
+    if (!userId || !userName || !aiQuery.trim()) return;
+    
+    try {
+      setAiLoading(true);
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': userId
+        },
+        body: JSON.stringify({ query: aiQuery })
+      });
 
-        if (response.ok) {
-          const data = await response.json();
-          setAiResponse(data.response);
-        }
-      } catch (error) {
-        console.error('Error getting AI response:', error);
-        setAiResponse("I'm sorry, I'm having trouble responding right now. Please try again later.");
-      } finally {
-        setAiLoading(false);
+      if (response.ok) {
+        const data = await response.json();
+        setAiResponse(data.response);
       }
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      setAiResponse("I'm sorry, I'm having trouble responding right now. Please try again later.");
+    } finally {
+      setAiLoading(false);
     }
   };
+
+  // If user hasn't entered their name yet, show welcome screen
+  if (!userName) {
+    return <WelcomeScreen onNameSubmit={setUserName} />;
+  }
 
   if (loading) {
     return (
@@ -395,7 +458,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className={`text-5xl md:text-6xl font-bold bg-gradient-to-r ${colors.primary} bg-clip-text text-transparent mb-2`}>
-                {getGreeting()}, Ibrahim 👋
+                {getGreeting()}, {userName} 👋
               </h1>
               <p className={`text-xl ${colors.accent}`}>
                 {format(new Date(), "EEEE, MMMM d, yyyy")} • Let's make today productive

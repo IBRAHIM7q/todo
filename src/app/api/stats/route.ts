@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    // For demo purposes, we'll use the user ID from localStorage
+    // In a real app with authentication, this would come from the session
+    const userId = req.headers.get('x-user-id') || 'demo-user';
+    
     // Get today's date range
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -11,13 +15,13 @@ export async function GET() {
     
     // Get tasks
     const tasks = await db.task.findMany({
-      where: { userId: 'cmfj0vqgm0000kz0xxt2k1076' }, // Use the actual user ID
+      where: { userId: userId },
     });
     
     // Get today's focus sessions
     const focusSessions = await db.focusSession.findMany({
       where: {
-        userId: 'cmfj0vqgm0000kz0xxt2k1076', // Use the actual user ID
+        userId: userId,
         createdAt: {
           gte: today,
           lt: tomorrow,
@@ -27,7 +31,7 @@ export async function GET() {
     
     // Get notes
     const notes = await db.note.findMany({
-      where: { userId: 'cmfj0vqgm0000kz0xxt2k1076' }, // Use the actual user ID
+      where: { userId: userId },
     });
     
     // Calculate stats
@@ -43,6 +47,18 @@ export async function GET() {
       .filter(session => session.type === 'BREAK')
       .reduce((total, session) => total + session.duration, 0);
     
+    // Count focus and break sessions
+    const focusSessionsCount = focusSessions.filter(session => session.type === 'FOCUS').length;
+    const breakSessionsCount = focusSessions.filter(session => session.type === 'BREAK').length;
+    
+    // Get recent notes (last 3)
+    const recentNotes = notes.slice(0, 3).map(note => ({
+      id: note.id,
+      title: note.title,
+      createdAt: note.createdAt,
+    }));
+    
+    // Count tasks by priority
     const highPriorityTasks = tasks.filter(task => task.priority === 'HIGH' && !task.completed).length;
     const mediumPriorityTasks = tasks.filter(task => task.priority === 'MEDIUM' && !task.completed).length;
     const lowPriorityTasks = tasks.filter(task => task.priority === 'LOW' && !task.completed).length;
@@ -63,20 +79,16 @@ export async function GET() {
         totalTime: totalFocusTime,
         breakTime: totalBreakTime,
         sessions: focusSessions.length,
-        focusSessions: focusSessions.filter(session => session.type === 'FOCUS').length,
-        breakSessions: focusSessions.filter(session => session.type === 'BREAK').length,
+        focusSessions: focusSessionsCount,
+        breakSessions: breakSessionsCount,
       },
       notes: {
         total: notes.length,
-        recent: notes.slice(0, 5).map(note => ({
-          id: note.id,
-          title: note.title,
-          createdAt: note.createdAt,
-        })),
+        recent: recentNotes,
       },
       today: {
         date: today.toISOString(),
-        isComplete: pendingTasks === 0,
+        isComplete: pendingTasks === 0 && totalTasks > 0,
       },
     };
     
