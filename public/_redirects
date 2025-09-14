@@ -1,1 +1,5 @@
-/* /index.html 200
+/* /.netlify/functions/next_api/* 200
+/* /_next/static/* 200
+/* /_next/image/* 200
+/* /api/* 200
+/* /* 200

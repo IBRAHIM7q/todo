@@ -3,8 +3,8 @@
   publish = ".next"
 
 [build.environment]
-  NETLIFY_NEXT_PLUGIN_SKIP = "true"
-  PRISMA_SKIP_POSTINSTALL_GENERATE = "true"
+  NETLIFY_NEXT_PLUGIN_SKIP = "false"
+  NODE_VERSION = "18"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
