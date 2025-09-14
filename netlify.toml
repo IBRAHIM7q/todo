@@ -4,19 +4,10 @@
 
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  PRISMA_SKIP_POSTINSTALL_GENERATE = "true"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Prevent dependency caching issues with Prisma
-[build.environment]
-  PRISMA_SKIP_POSTINSTALL_GENERATE = "true"
-
 [build.processing]
   skip_processing = true
-
-# Force Prisma to regenerate client on each build
-[[redirects]]
-  from = "/*"
-  to = "/:splat"
-  status = 200
