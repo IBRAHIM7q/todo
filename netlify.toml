@@ -1,10 +1,29 @@
 [build]
-  command = "cd Todo && npm install && npm run build"
+  command = "npm run build"
+  publish = ".next"
   base = "."
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--include=dev"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/next_api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/_next/static/*"
+  to = "/_next/static/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/_next/image/*"
+  to = "/_next/image/:splat"
+  status = 200
 
 [[redirects]]
   from = "/*"

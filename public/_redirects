@@ -1,5 +1,4 @@
-/* /.netlify/functions/next_api/* 200
-/* /_next/static/* 200
-/* /_next/image/* 200
-/* /api/* 200
-/* /* 200
+/api/* /.netlify/functions/next_api/:splat 200
+/_next/static/* /_next/static/:splat 200
+/_next/image/* /_next/image/:splat 200
+/* /index.html 200
