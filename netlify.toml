@@ -1,5 +1,5 @@
 [build]
-  command = "cd my-architecture-site && npm install && npm run build"
+  command = "cd Todo && npm install && npm run build"
   base = "."
 
 [build.environment]
