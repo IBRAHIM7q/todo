@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ColorSchemeSelector } from "@/components/color-scheme-selector";
 import { WelcomeScreen } from "@/components/welcome-screen";
+import { useToast } from "@/hooks/use-toast";
 
 interface Task {
   id: string;
@@ -119,6 +120,7 @@ const colorSchemes = {
 };
 
 export default function Dashboard() {
+  const { toast } = useToast();
   const [userName, setUserName] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -182,17 +184,38 @@ export default function Dashboard() {
       if (tasksRes.ok) {
         const tasksData = await tasksRes.json();
         setTasks(tasksData);
+      } else {
+        console.error('Failed to fetch tasks:', tasksRes.status);
+        toast({
+          title: "Error",
+          description: "Failed to load tasks. Please refresh the page.",
+          variant: "destructive",
+        });
       }
 
       if (notesRes.ok) {
         const notesData = await notesRes.json();
         setNotes(notesData);
+      } else {
+        console.error('Failed to fetch notes:', notesRes.status);
+        toast({
+          title: "Error",
+          description: "Failed to load notes. Please refresh the page.",
+          variant: "destructive",
+        });
       }
 
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
         setFocusTime(statsData.focus.totalTime);
+      } else {
+        console.error('Failed to fetch stats:', statsRes.status);
+        toast({
+          title: "Error",
+          description: "Failed to load stats. Please refresh the page.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -286,6 +309,13 @@ export default function Dashboard() {
         setNewTask({ title: "", description: "", priority: "MEDIUM", estimatedTime: 0 });
         // Refresh stats
         fetchData();
+      } else {
+        console.error('Failed to add task:', response.status);
+        toast({
+          title: "Error",
+          description: "Failed to add task. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error adding task:', error);
@@ -313,6 +343,13 @@ export default function Dashboard() {
           ));
           // Refresh stats
           fetchData();
+        } else {
+          console.error('Failed to toggle task:', response.status);
+          toast({
+            title: "Error",
+            description: "Failed to update task. Please try again.",
+            variant: "destructive",
+          });
         }
       }
     } catch (error) {
@@ -335,6 +372,13 @@ export default function Dashboard() {
         setTasks(tasks.filter(task => task.id !== id));
         // Refresh stats
         fetchData();
+      } else {
+        console.error('Failed to delete task:', response.status);
+        toast({
+          title: "Error",
+          description: "Failed to delete task. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error deleting task:', error);
