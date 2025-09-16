@@ -1,32 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { db } from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
     const { title, description, completed, priority, category, dueDate } = await request.json();
+    const userId = request.headers.get('x-user-id') || 'demo-user';
+    
+    // Await the params
+    const { id } = await params;
     
     // First, check if the task belongs to the user
     const existingTask = await db.task.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
     
-    if (!existingTask || existingTask.userId !== session.user.id) {
+    if (!existingTask || existingTask.userId !== userId) {
       return NextResponse.json({ error: 'Task not found or unauthorized' }, { status: 404 });
     }
     
     const task = await db.task.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         title,
         description,
@@ -46,27 +42,26 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const userId = request.headers.get('x-user-id') || 'demo-user';
     
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Await the params
+    const { id } = await params;
     
     // First, check if the task belongs to the user
     const existingTask = await db.task.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { userId: true },
     });
     
-    if (!existingTask || existingTask.userId !== session.user.id) {
+    if (!existingTask || existingTask.userId !== userId) {
       return NextResponse.json({ error: 'Task not found or unauthorized' }, { status: 404 });
     }
     
     await db.task.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
     
     return NextResponse.json({ success: true });

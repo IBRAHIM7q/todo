@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, priority, category, dueDate } = await request.json();
+    const { title, description, priority, category, dueDate, estimatedTime } = await request.json();
     const userId = request.headers.get('x-user-id') || 'demo-user';
     
     // Ensure user exists
@@ -42,15 +42,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
     
+    // Create task data object
+    const taskData: any = {
+      title,
+      description,
+      priority: priority || 'MEDIUM',
+      category,
+      dueDate: dueDate ? new Date(dueDate) : null,
+      userId: user.id,
+    };
+    
+    // Only add estimatedTime if it's provided
+    if (estimatedTime !== undefined && estimatedTime !== null) {
+      taskData.estimatedTime = estimatedTime;
+    }
+    
     const task = await db.task.create({
-      data: {
-        title,
-        description,
-        priority: priority || 'MEDIUM',
-        category,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        userId: user.id,
-      },
+      data: taskData,
     });
     
     return NextResponse.json(task, { status: 201 });
@@ -62,7 +70,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { title, description, completed, priority, category, dueDate } = await request.json();
+    const { title, description, completed, priority, category, dueDate, estimatedTime } = await request.json();
     const userId = request.headers.get('x-user-id') || 'demo-user';
     
     // First, check if the task belongs to the user
@@ -74,16 +82,24 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Task not found or unauthorized' }, { status: 404 });
     }
     
+    // Create update data object
+    const updateData: any = {
+      title,
+      description,
+      completed,
+      priority,
+      category,
+      dueDate: dueDate ? new Date(dueDate) : null,
+    };
+    
+    // Only add estimatedTime if it's provided
+    if (estimatedTime !== undefined && estimatedTime !== null) {
+      updateData.estimatedTime = estimatedTime;
+    }
+    
     const updatedTask = await db.task.update({
       where: { id: params.id },
-      data: {
-        title,
-        description,
-        completed,
-        priority,
-        category,
-        dueDate: dueDate ? new Date(dueDate) : null,
-      },
+      data: updateData,
     });
     
     return NextResponse.json(updatedTask);

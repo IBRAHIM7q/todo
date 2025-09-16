@@ -127,7 +127,12 @@ export default function Dashboard() {
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [timerType, setTimerType] = useState<"FOCUS" | "BREAK">("FOCUS");
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
-  const [newTask, setNewTask] = useState({ title: "", description: "", priority: "MEDIUM" as "LOW" | "MEDIUM" | "HIGH" });
+  const [newTask, setNewTask] = useState({ 
+    title: "", 
+    description: "", 
+    priority: "MEDIUM" as "LOW" | "MEDIUM" | "HIGH",
+    estimatedTime: 0
+  });
   const [newNote, setNewNote] = useState({ title: "", content: "", tags: "" });
   const [aiResponse, setAiResponse] = useState("");
   const [aiQuery, setAiQuery] = useState("");
@@ -278,7 +283,7 @@ export default function Dashboard() {
       if (response.ok) {
         const task = await response.json();
         setTasks([...tasks, task]);
-        setNewTask({ title: "", description: "", priority: "MEDIUM" });
+        setNewTask({ title: "", description: "", priority: "MEDIUM", estimatedTime: 0 });
         // Refresh stats
         fetchData();
       }
@@ -449,8 +454,8 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br bg-background text-foreground">
       {/* Background Pattern */}
-      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm dark:bg-black/40"></div>
-      <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM5QzkyQUMiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzR2LTRoLTJ2NGgtNHYyaDR2NGgydi00aDR2LTJoLTR6bTAtMzBWMGgtMnY0aC00djJoNHY0aDJWNmg0VjRoLTR6bTYgMzR2LTRINGg0djBIMnY0aDR2LTRINGg0djJINGgtNHY0aDQtNHYyaDR2LTRINGg0djJoNHY0aC00ek02IDRWMGgtNHY0SDB2Mmg0djRoMnYtNGg0VjZINGgtNHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30 dark:opacity-20"></div>
+      <div className="fixed inset-0 bg-black/5 backdrop-blur-sm dark:bg-black/40"></div>
+      <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM5QzkyQUMiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0di00aC0ydjRoLTR2Mmg0djRoMnYtNGg0di0yaC00em0wLTMwVjBoLTJ2NGgtNHYyaDR2NGgyVjZoNFY0aC00em02IDM0di00SDRoNHYwSDJ2NGg0di00SDRoNHYySDRoLTR2NGg0LTR2Mmg0di00aDR2LTRoLTR2Mmg0djRoLTR2Mmg0djRoLTQek02IDRWMGgtNHY0SDB2Mmg0djRoMnYtNGg0VjZINGgtNHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20 dark:opacity-10"></div>
       
       <div className="relative z-10 max-w-7xl mx-auto p-4 md:p-8">
         {/* Header */}
@@ -486,7 +491,7 @@ export default function Dashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className={`bg-background/10 backdrop-blur-md border ${colors.card} hover:bg-background/15 transition-all duration-300`}>
+          <Card className={`bg-background/70 backdrop-blur-sm border ${colors.card} hover:bg-background/90 transition-all duration-300`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className={colors.accent}>Tasks Today</CardTitle>
               <Target className="h-5 w-5 text-primary" />
@@ -498,25 +503,25 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className={`bg-background/10 backdrop-blur-md border-blue-500/20 hover:bg-background/15 transition-all duration-300`}>
+          <Card className={`bg-background/70 backdrop-blur-sm border-blue-500/30 hover:bg-background/90 transition-all duration-300`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-blue-300">Focus Time</CardTitle>
-              <Clock className="h-5 w-5 text-blue-400" />
+              <CardTitle className="text-blue-600">Focus Time</CardTitle>
+              <Clock className="h-5 w-5 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-foreground">{Math.floor(focusTime / 60)}h {focusTime % 60}m</div>
-              <p className="text-blue-200 text-sm">Today's focus time</p>
+              <p className="text-blue-500 text-sm">Today's focus time</p>
             </CardContent>
           </Card>
 
-          <Card className={`bg-background/10 backdrop-blur-md border-green-500/20 hover:bg-background/15 transition-all duration-300`}>
+          <Card className={`bg-background/70 backdrop-blur-sm border-green-500/30 hover:bg-background/90 transition-all duration-300`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-green-300">Notes</CardTitle>
-              <BookOpen className="h-5 w-5 text-green-400" />
+              <CardTitle className="text-green-600">Notes</CardTitle>
+              <BookOpen className="h-5 w-5 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-foreground">{notes.length}</div>
-              <p className="text-green-200 text-sm">Quick notes saved</p>
+              <p className="text-green-500 text-sm">Quick notes saved</p>
             </CardContent>
           </Card>
         </div>
@@ -573,6 +578,13 @@ export default function Dashboard() {
                     <option value="MEDIUM" className="bg-background">🟡 Medium Priority</option>
                     <option value="HIGH" className="bg-background">🔴 High Priority</option>
                   </select>
+                  <Input
+                    type="number"
+                    placeholder="Est. time (min)"
+                    value={newTask.estimatedTime || ''}
+                    onChange={(e) => setNewTask({ ...newTask, estimatedTime: parseInt(e.target.value) || 0 })}
+                    className={`bg-background/10 border ${colors.card} text-foreground placeholder-muted-foreground focus:border-primary w-32`}
+                  />
                   <Button onClick={addTask} className={colors.button + " text-white"}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Task
@@ -854,15 +866,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* AI Cost Explanation */}
-                <div className="bg-background/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
-                  <h4 className="text-foreground font-medium mb-2">💰 About AI Usage</h4>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    This AI assistant uses the Z.ai SDK. Basic usage is free for testing and development. 
-                    For production use, costs depend on the AI model and usage volume. 
-                    You can monitor usage and set up billing in your Z.ai dashboard.
-                  </p>
-                </div>
+
               </CardContent>
             </Card>
           </TabsContent>
