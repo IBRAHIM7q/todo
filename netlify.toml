@@ -6,7 +6,6 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--include=dev"
-  # For production, you should set a proper DATABASE_URL in Netlify environment variables
   DATABASE_URL = "file:./custom.db"
 
 [[plugins]]

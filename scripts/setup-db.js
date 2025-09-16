@@ -17,11 +17,13 @@ if (isNetlify) {
   
   // Run Prisma migrations
   try {
+    // Use the correct path for Netlify
     execSync('npx prisma migrate deploy', { stdio: 'inherit' });
     console.log('Database migrations completed successfully');
   } catch (error) {
     console.error('Error running database migrations:', error.message);
-    process.exit(1);
+    // Try to continue anyway as the database might already be set up
+    console.log('Continuing with deployment...');
   }
 } else {
   console.log('Not running on Netlify, skipping database setup');

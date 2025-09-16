@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  binaryTargets = ["native"]
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -49,7 +49,7 @@ model Note {
   tags      String?  // Comma-separated tags
   userId    String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime   @updatedAt
   
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
