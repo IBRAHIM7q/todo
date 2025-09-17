@@ -1,7 +1,8 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Access your API key as an environment variable
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || 'AIzaSyDWgy8LQFNH5Xg0YN6fGWo_OIvjtUodQXI');
+// IMPORTANT: Make sure to set the GOOGLE_AI_API_KEY environment variable
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
 async function testAI() {
   // The Gemini 1.5 models are versatile and work with most use cases
