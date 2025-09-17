@@ -1,7 +1,16 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Access your API key as an environment variable
-// IMPORTANT: Make sure to set the GOOGLE_AI_API_KEY environment variable
+// IMPORTANT: Make sure to set the GOOGLE_AI_API_KEY environment variable in .env file
+if (!process.env.GOOGLE_AI_API_KEY) {
+  console.error('Error: GOOGLE_AI_API_KEY environment variable is not set');
+  console.error('Please set it in your .env file');
+  process.exit(1);
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
 async function testAI() {
